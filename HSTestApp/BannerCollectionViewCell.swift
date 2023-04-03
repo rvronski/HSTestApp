@@ -13,6 +13,7 @@ class BannerCollectionViewCell: UICollectionViewCell {
         let imageView = UIImageView()
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.clipsToBounds = true
+        imageView.layer.cornerRadius = 10
         return imageView
     }()
     override init(frame: CGRect) {
@@ -43,4 +44,4 @@ class BannerCollectionViewCell: UICollectionViewCell {
     }
 }
 
-}
+
