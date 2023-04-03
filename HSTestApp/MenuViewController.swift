@@ -16,6 +16,7 @@ import UIKit
         
         enum Section: Int, CaseIterable {
             case banners
+            case header
             case menu
         }
        
@@ -58,7 +59,7 @@ import UIKit
             menuCollectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
             menuCollectionView.register(BannerCollectionViewCell.self, forCellWithReuseIdentifier: BannerCollectionViewCell.cellIdentifire)
             menuCollectionView.register(MenuCollectionViewCell.self, forCellWithReuseIdentifier: MenuCollectionViewCell.identifire)
-    //        menuCollectionView.register(FlashSaleCollectionViewCell.self, forCellWithReuseIdentifier: FlashSaleCollectionViewCell.cellIdentifire)
+            menuCollectionView.register(HeaderMenuSupplementaryView.self, forCellWithReuseIdentifier: HeaderMenuSupplementaryView.identifire)
     //        menuCollectionView.register(BrandCollectionViewCell.self, forCellWithReuseIdentifier: BrandCollectionViewCell.cellIdentifier)
             self.view.addSubview(menuCollectionView)
             
@@ -81,6 +82,11 @@ import UIKit
                     cell.config(model: self.bannerImage[indexPath.row])
                     return cell
                    
+                case .header:
+                    let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HeaderMenuSupplementaryView.identifire, for: indexPath) as! HeaderMenuSupplementaryView
+                    
+                    return cell
+                    
                 case .menu:
                     let cell = collectionView.dequeueReusableCell(withReuseIdentifier: MenuCollectionViewCell.identifire, for: indexPath) as! MenuCollectionViewCell
                    
@@ -98,6 +104,8 @@ import UIKit
 //
             snapshot.appendSections([.banners])
             snapshot.appendItems(bannersId, toSection: .banners)
+            snapshot.appendSections([.header])
+            snapshot.appendItems((Array(13..<20)), toSection: .header)
             snapshot.appendSections([.menu])
             snapshot.appendItems((Array(0..<12)), toSection: .menu)
             self.dataSource.apply(snapshot, animatingDifferences: false)
@@ -107,6 +115,8 @@ import UIKit
             switch section {
             case .banners:
                 return bannersSection()
+            case.header:
+                return headerSection()
             case .menu:
                 return menuSection()
            
@@ -116,7 +126,7 @@ import UIKit
         private func bannersSection() -> NSCollectionLayoutSection {
             let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
             let item = NSCollectionLayoutItem(layoutSize: itemSize)
-            item.contentInsets = NSDirectionalEdgeInsets(top: 16, leading: 16, bottom: 0, trailing: 16)
+            item.contentInsets = NSDirectionalEdgeInsets(top: 16, leading: 16, bottom: 0, trailing: 8)
             let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0/1.3), heightDimension: .fractionalWidth(0.350))
             let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
             let section = NSCollectionLayoutSection(group: group)
@@ -137,7 +147,17 @@ import UIKit
             return section
         }
         
-        
+        private func headerSection() -> NSCollectionLayoutSection {
+            let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
+            let item = NSCollectionLayoutItem(layoutSize: itemSize)
+            item.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4)
+            let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0/4.0), heightDimension: .fractionalWidth(0.1))
+            let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+            let section = NSCollectionLayoutSection(group: group)
+            section.interGroupSpacing = 0
+            section.orthogonalScrollingBehavior = .continuous
+            return section
+        }
         
        
     }
