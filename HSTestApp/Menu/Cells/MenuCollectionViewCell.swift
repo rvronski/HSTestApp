@@ -4,18 +4,20 @@
 //
 //  Created by ROMAN VRONSKY on 03.04.2023.
 //
-
+// Api key AzZMs8TaPLHwv4uZ0
 import UIKit
 
 class MenuCollectionViewCell: UICollectionViewCell {
     
     static let identifire = "menuCell"
     
-    private lazy var productImage: UIImageView = {
+    lazy var productImage: UIImageView = {
        let image = UIImageView()
         image.translatesAutoresizingMaskIntoConstraints = false
         image.clipsToBounds = true
         image.image = UIImage(named: "pizza")
+        image.contentMode = .scaleAspectFill
+        image.layer.cornerRadius = 132/2
         return image
     }()
    
@@ -58,6 +60,14 @@ class MenuCollectionViewCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
+    func config(model: PizzaItem) {
+        
+        productImage.image = model.linkImagen
+        foodNameLabel.text = model.nombre
+        foodDescriptionLabel.text = model.descripcion
+        priceButton.setTitle(model.precio, for: .normal)
+    }
+    
     private func setupView() {
         self.contentView.addSubview(productImage)
         self.contentView.addSubview(foodNameLabel)
@@ -91,5 +101,6 @@ class MenuCollectionViewCell: UICollectionViewCell {
         
         
         ])
+        
     }
 }

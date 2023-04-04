@@ -10,44 +10,75 @@ import UIKit
     class MenuViewController: UIViewController {
         
         static let headerElementKind = "header-element-kind"
-
-        
+        private let networkManager = NetworkManager.shared
+        private var pizzas = [PizzaItem]()
         private let bannerImage = ["1625537050_13-kartinkin-com-p-sushi-pitstsa-fon-krasivie-foni-13","1625702581_15-phonoteka-org-p-art-pitstsa-menyu-krasivo-18","CrXD7fxWgAAjvoB.jpg-large"]
         
         enum Section: Int, CaseIterable {
             case banners
-            case header
             case menu
         }
        
         var menuCollectionView: UICollectionView! = nil
         var dataSource: UICollectionViewDiffableDataSource<Section, Int>! = nil
         
+       private lazy var activityIndicator: UIActivityIndicatorView = {
+            let indicator = UIActivityIndicatorView(style: .large)
+            indicator.translatesAutoresizingMaskIntoConstraints = false
+            return indicator
+        }()
+        
         override func viewDidLoad() {
             super.viewDidLoad()
             setupView()
-            configureHierarchy()
-            configureDataSource()
+            activityIndicator.isHidden = false
+            activityIndicator.startAnimating()
+            networkManager.getPizzas { [weak self] pizzas in
+                let pizza = pizzas.prefix(15)
+                self?.pizzas = PizzaItem.testData(model: Array(pizza))
+                DispatchQueue.main.async {
+                    self?.activityIndicator.isHidden = true
+                    self?.activityIndicator.stopAnimating()
+                    self?.configureHierarchy()
+                    self?.configureDataSource()
+                }
+            }
+            
         }
+        
         private func setupView(){
             self.view.backgroundColor = .opaqueSeparator
+            self.view.addSubview(activityIndicator)
+            
+            NSLayoutConstraint.activate([
+            
+                activityIndicator.centerXAnchor.constraint(equalTo: self.view.centerXAnchor),
+                activityIndicator.centerYAnchor.constraint(equalTo: self.view.centerYAnchor),
+            
+            ])
         }
         
         private func createLayout() -> UICollectionViewLayout {
             let sectionProvider: UICollectionViewCompositionalLayoutSectionProvider = { (sectionIndex, layoutEnvironment) -> NSCollectionLayoutSection? in
                 guard let sectionKind = Section(rawValue: sectionIndex) else { return nil }
+                
                 let section = self.layoutSection(for: sectionKind, layoutEnvironment: layoutEnvironment)
-//                let sectionHeader = NSCollectionLayoutBoundarySupplementaryItem(
-//                    layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
-//                                                       heightDimension: .estimated(44)),
-//                    elementKind: MenuViewController.headerElementKind,
-//                    alignment: .top)
-//                section.boundarySupplementaryItems = [sectionHeader]
+                let sectionHeader = NSCollectionLayoutBoundarySupplementaryItem(
+                    layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
+                                                       heightDimension: .estimated(44)),
+                    elementKind: MenuViewController.headerElementKind,
+                    alignment: .top)
+                sectionHeader.pinToVisibleBounds = true
+                sectionHeader.zIndex = 2
+
+                section.boundarySupplementaryItems = [sectionHeader]
+                
                 return section
             }
             let config = UICollectionViewCompositionalLayoutConfiguration()
             config.interSectionSpacing = 16.0
             let layout = UICollectionViewCompositionalLayout(sectionProvider: sectionProvider, configuration: config)
+           
             return layout
         }
 
@@ -59,8 +90,6 @@ import UIKit
             menuCollectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
             menuCollectionView.register(BannerCollectionViewCell.self, forCellWithReuseIdentifier: BannerCollectionViewCell.cellIdentifire)
             menuCollectionView.register(MenuCollectionViewCell.self, forCellWithReuseIdentifier: MenuCollectionViewCell.identifire)
-            menuCollectionView.register(HeaderMenuSupplementaryView.self, forCellWithReuseIdentifier: HeaderMenuSupplementaryView.identifire)
-    //        menuCollectionView.register(BrandCollectionViewCell.self, forCellWithReuseIdentifier: BrandCollectionViewCell.cellIdentifier)
             self.view.addSubview(menuCollectionView)
             
             NSLayoutConstraint.activate([
@@ -74,22 +103,18 @@ import UIKit
         func configureDataSource() {
             dataSource = UICollectionViewDiffableDataSource<Section, Int>(collectionView: menuCollectionView, cellProvider: { (collectionView, indexPath, itemIdentifier) -> UICollectionViewCell in
                 let section = Section(rawValue: indexPath.section)
-    //            let model = PageOneModel()
                 switch section {
                 case .banners:
                     let cell = collectionView.dequeueReusableCell(withReuseIdentifier: BannerCollectionViewCell.cellIdentifire, for: indexPath) as! BannerCollectionViewCell
                   
                     cell.config(model: self.bannerImage[indexPath.row])
+                    
                     return cell
                    
-                case .header:
-                    let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HeaderMenuSupplementaryView.identifire, for: indexPath) as! HeaderMenuSupplementaryView
-                    
-                    return cell
-                    
                 case .menu:
                     let cell = collectionView.dequeueReusableCell(withReuseIdentifier: MenuCollectionViewCell.identifire, for: indexPath) as! MenuCollectionViewCell
-                   
+                    cell.config(model: self.pizzas[indexPath.row])
+                    
                     return cell
                
                     
@@ -98,16 +123,33 @@ import UIKit
                     
                 }
             })
-//
+            
+            let supplementaryRegistration = UICollectionView.SupplementaryRegistration
+            <HeaderMenuSupplementaryView>(elementKind: MenuViewController.headerElementKind) {
+                (supplementaryView, string, indexPath) in
+                let section = Section(rawValue: indexPath.section)
+                switch section {
+                case .banners:
+                    supplementaryView.isHidden(true)
+                case .menu:
+                    supplementaryView.isHidden(false)
+                case .none:
+                    fatalError()
+                }
+            }
+            
+            dataSource.supplementaryViewProvider = { (view, kind, index) in
+                return self.menuCollectionView.dequeueConfiguredReusableSupplementary(
+                    using: supplementaryRegistration, for: index)
+            }
+            
             var snapshot = NSDiffableDataSourceSnapshot<Section, Int>()
             let bannersId = bannerImage.map({$0.hashValue})
-//
+            let menuId = pizzas.map({$0.nombre.hashValue})
             snapshot.appendSections([.banners])
             snapshot.appendItems(bannersId, toSection: .banners)
-            snapshot.appendSections([.header])
-            snapshot.appendItems((Array(13..<20)), toSection: .header)
             snapshot.appendSections([.menu])
-            snapshot.appendItems((Array(0..<12)), toSection: .menu)
+            snapshot.appendItems(menuId, toSection: .menu)
             self.dataSource.apply(snapshot, animatingDifferences: false)
         }
         
@@ -115,8 +157,6 @@ import UIKit
             switch section {
             case .banners:
                 return bannersSection()
-            case.header:
-                return headerSection()
             case .menu:
                 return menuSection()
            
@@ -127,7 +167,7 @@ import UIKit
             let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
             let item = NSCollectionLayoutItem(layoutSize: itemSize)
             item.contentInsets = NSDirectionalEdgeInsets(top: 16, leading: 16, bottom: 0, trailing: 8)
-            let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0/1.3), heightDimension: .fractionalWidth(0.350))
+            let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0/1.2), heightDimension: .fractionalWidth(0.350))
             let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
             let section = NSCollectionLayoutSection(group: group)
             section.interGroupSpacing = 0
@@ -147,19 +187,6 @@ import UIKit
             return section
         }
         
-        private func headerSection() -> NSCollectionLayoutSection {
-            let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
-            let item = NSCollectionLayoutItem(layoutSize: itemSize)
-            item.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4)
-            let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0/4.0), heightDimension: .fractionalWidth(0.1))
-            let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
-            let section = NSCollectionLayoutSection(group: group)
-            section.interGroupSpacing = 0
-            section.orthogonalScrollingBehavior = .continuous
-            return section
-        }
-        
-       
     }
         
 
