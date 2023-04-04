@@ -27,6 +27,7 @@ struct PizzaItem {
     var precio: String
     
 }
+var categories: [String] = []
 
 extension PizzaItem {
     static func testData(model: [Pizza]) -> [PizzaItem] {
@@ -54,7 +55,16 @@ extension PizzaItem {
         }
         return array
     }
+    static func getCategories(model: [Pizza]) -> [String] {
+        var array = [String]()
+        for name in model {
+            array.append(name.nombre)
+        }
+        return array
+    }
 }
+
+
 //{
 //  "mensaje": "La accion fue realizada exitosamente",
 //  "ok": true,

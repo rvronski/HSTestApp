@@ -9,19 +9,19 @@ import UIKit
 
 class HeaderCollectionViewCell: UICollectionViewCell {
     
-    private lazy var menuButton: UIButton = {
-           let button = UIButton(type: .custom)
-           button.translatesAutoresizingMaskIntoConstraints = false
-           button.setTitle("Pizza", for: .normal)
-           button.setTitleColor(UIColor.systemPink, for: .normal)
-           button.layer.borderWidth = 0.2
-           button.layer.borderColor = UIColor.systemPink.cgColor
-           button.layer.cornerRadius = 20
-           return button
-       }()
+     lazy var title: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.text = "Pizza"
+        label.layer.borderWidth = 0.5
+        label.layer.cornerRadius = 20
+        label.textColor = .systemPink
+        label.textAlignment = .center
+        label.layer.borderColor = UIColor.systemPink.cgColor
+        return label
+    
+    }()
    
-    
-    
     override init(frame: CGRect) {
         super.init(frame: frame)
        setup()
@@ -31,18 +31,20 @@ class HeaderCollectionViewCell: UICollectionViewCell {
         fatalError()
     }
     
+    func config(_ categories: String) {
+        title.text = categories
+    }
     
     private func setup() {
-        contentView.addSubview(menuButton)
-        
+        contentView.addSubview(title)
         NSLayoutConstraint.activate([
         
-            menuButton.topAnchor.constraint(equalTo: contentView.topAnchor),
-            menuButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
-            menuButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            menuButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            title.topAnchor.constraint(equalTo: contentView.topAnchor),
+            title.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            title.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            title.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             
         ])
     }
-    
+   
 }

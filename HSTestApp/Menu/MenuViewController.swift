@@ -36,6 +36,7 @@ import UIKit
             networkManager.getPizzas { [weak self] pizzas in
                 let pizza = pizzas.prefix(15)
                 self?.pizzas = PizzaItem.testData(model: Array(pizza))
+                categories = PizzaItem.getCategories(model: Array(pizza))
                 DispatchQueue.main.async {
                     self?.activityIndicator.isHidden = true
                     self?.activityIndicator.stopAnimating()
@@ -70,7 +71,7 @@ import UIKit
                     alignment: .top)
                 sectionHeader.pinToVisibleBounds = true
                 sectionHeader.zIndex = 2
-
+               
                 section.boundarySupplementaryItems = [sectionHeader]
                 
                 return section
@@ -85,6 +86,7 @@ import UIKit
         func configureHierarchy() {
             
             menuCollectionView = UICollectionView(frame: .zero, collectionViewLayout: createLayout())
+            menuCollectionView.delegate = self
             menuCollectionView.translatesAutoresizingMaskIntoConstraints = false
             menuCollectionView.backgroundColor = .white
             menuCollectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
@@ -127,6 +129,7 @@ import UIKit
             let supplementaryRegistration = UICollectionView.SupplementaryRegistration
             <HeaderMenuSupplementaryView>(elementKind: MenuViewController.headerElementKind) {
                 (supplementaryView, string, indexPath) in
+                supplementaryView.delegate = self
                 let section = Section(rawValue: indexPath.section)
                 switch section {
                 case .banners:
@@ -141,6 +144,7 @@ import UIKit
             dataSource.supplementaryViewProvider = { (view, kind, index) in
                 return self.menuCollectionView.dequeueConfiguredReusableSupplementary(
                     using: supplementaryRegistration, for: index)
+               
             }
             
             var snapshot = NSDiffableDataSourceSnapshot<Section, Int>()
@@ -188,7 +192,20 @@ import UIKit
         }
         
     }
+extension MenuViewController: UICollectionViewDelegate, HeaderDelegate {
+    func scrollMenu(index: Int) {
         
+        menuCollectionView.selectItem(at: [1,index], animated: true, scrollPosition: .top)
+       
+    }
+    
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        collectionView.deselectItem(at: indexPath, animated: true)
+        print(indexPath)
+        
+    }
+}
 
 
 
